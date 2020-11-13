@@ -1,11 +1,11 @@
-# YOLOv2 Accelerator in Xilinx's Zynq-7000 Soc(PYNQ-z2 and Zedboard)
-A Demo for accelerating YOLOv2 in Xilinx's FPGA PYNQ-z2 and Zedboard  
+# YOLOv2 Accelerator in Xilinx's Zynq-7000 Soc(PYNQ-z2, Zedboard and ZCU102)
+A Demo for accelerating YOLOv2 in Xilinx's FPGA PYNQ-z2, Zedboard and ZCU102
 __I have graduated from Jiangnan University, China in July 1, 2019. Related papers are available now.__  
 Master thesis ["Research of Scalability on FPGA-based Neural Network Accelerator"](https://kns.cnki.net/KCMS/detail/detail.aspx?dbcode=CMFD&dbname=CMFDTEMP&filename=1019228234.nh&uid=WEEvREcwSlJHSldRa1FhdXNXaEhoOGhUTzA5T0tESzdFZ2pyR1NJR1ZBaz0=$9A4hF_YAuvQ5obgVAqNKPCYcEjKensW4IQMovwHtwkF4VYPoHbKxJw!!&v=MjE5NTN5dmdXN3JBVkYyNkY3RzZGdFBQcTVFYlBJUjhlWDFMdXhZUzdEaDFUM3FUcldNMUZyQ1VSTE9lWnVkdUY=)  
 Journal article ["Design and implementation of FPGA-based deep learning object detection system"](https://kns.cnki.net/KCMS/detail/detail.aspx?dbcode=CJFQ&dbname=CJFDLAST2019&filename=DZJY201908009&uid=WEEvREcwSlJHSldRa1FhdXNXaEhoOGhUTzA5T0tESzdFZ2pyR1NJR1ZBaz0=$9A4hF_YAuvQ5obgVAqNKPCYcEjKensW4IQMovwHtwkF4VYPoHbKxJw!!&v=MDU0NDJDVVJMT2VadWR1Rnl2Z1c3ck1JVGZCZDdHNEg5ak1wNDlGYllSOGVYMUx1eFlTN0RoMVQzcVRyV00xRnI=)   
 Journal article ["Design and Implementation of YOLOv2 Accelerator Based on Zynq7000 FPGA Heterogeneous Platform"](https://kns.cnki.net/KCMS/detail/detail.aspx?dbcode=CJFQ&dbname=CJFDTEMP&filename=KXTS201910005&uid=WEEvREcwSlJHSldRa1FhdXNXaEhoOGhUTzA5T0tESzdFZ2pyR1NJR1ZBaz0=$9A4hF_YAuvQ5obgVAqNKPCYcEjKensW4IQMovwHtwkF4VYPoHbKxJw!!&v=MjkwNzdXTTFGckNVUkxPZVp1ZHVGeXZnVzdyT0xqWGZmYkc0SDlqTnI0OUZZWVI4ZVgxTHV4WVM3RGgxVDNxVHI=)
 
-For PYNQ-z2 and Zedboard, in addition to final Linux application( For PYNQ, turn to PYNQ directory; For Zedboard, turn to SDK and PetaLinux), other steps are almost same:
+For PYNQ-z2 and Zedboard, in addition to final Linux application( For PYNQ, turn to PYNQ directory; For Zedboard and ZCU102, turn to SDK and PetaLinux), other steps are almost same:
 ## (1)Software Simulation
 Firstly, you should download the darknet source from [https://github.com/pjreddie/darknet](https://github.com/pjreddie/darknet) and yolov2.weights from [https://pjreddie.com/media/files/yolov2.weights](https://pjreddie.com/media/files/yolov2.weights). 
 
@@ -47,23 +47,24 @@ Similar to [8], the design implements ping-pong buffers to overlap the delay of 
 # Evaulate  
 Experiments show that floating point addition in HLS requires three DSP resources, floating point multiplication requires two DSPs; fixed point 16-bit multiplication requires one DSP, and fixed-point 16-bit addition can be implemented only using LUT. After placing and routing, resource consumptions of fixed-16 (Tn=2, Tm=32, Tr=26, Tc=26) are shown as follows:     
 
-  |  Resource     |  DSP      | BRAM      | LUT        |  FF        | Freq   |
-  |  -----        |   -----   | -----     | -----      |  -----     | -----  |
-  |Fixed-16(n2m32)| 153(69%)  | 88(63%)  | 35977(68%) | 36247(34%) |	150MHz |
-
+  |  Resource     |  DSP      | BRAM      | LUT        |  FF        | Freq   | Dev    |
+  |  -----        |   -----   | -----     | -----      |  -----     | -----  |-----   |
+  |Fixed-16(n4m32)| 153(69%)  | 88(63%)   | 35977(68%) | 36247(34%) |	150MHz |Zedboard|
+  |Fixed-16(n4m32)| 147(6%)   | 88(10%)   | 36759(13%) | 30447(6%)  |	180MHz |ZCU102  |  
+  
 According to the current design, DSP and BRAM are more expensive. The cost of DSP can be further reduced (there are many bit-width redundant multiplications), and the BRAM cost can be reduced. (As Shen [1] said, BRAM allocates an exponential size of 2 in HLS. Actually, many BRAMs are redundant. ).  
 The performance comparison in the two cases is shown in the following table:  
   
-| Performance              |        |        |
-|  -----                   | -----  | -----  |
-|CNN models	               |YOLO v2 |YOLO v2 |
-|Board                     | PYNQ   |Zedboard|                
-|Clock(MHz)		             |  150   |  150   |
-|Precision		             |Fixed-16|Fixed-16|
-|Power (W)		             |   2.98 |   1.20 |
-|Operations (GOP)		       |29.47   |29.47   |
-|Performance(GOP/s)		     |25.98   |30.15   |
-|Power Efficiency(GOP/s/W) |	4.20  | 6.02   |
+| Performance              |        |        |        |
+|  -----                   | -----  | -----  | -----  |
+|CNN models	               |YOLO v2 |YOLO v2 | YOLO v2|
+|Board                     | PYNQ   |Zedboard| ZCU102 |                
+|Clock(MHz)		             |  150   |  150   |  180   |
+|Precision		             |Fixed-16|Fixed-16|Fixed-16|
+|Power (W)		             |   2.98 |   1.20 | ?      |
+|Operations (GOP)		       |29.47   |29.47   | 29.47  |
+|Performance(GOP/s)		     |25.98   |30.15   | 36.13  |
+|Power Efficiency(GOP/s/W) |	4.20  | 6.02   | ?      | 
 
 # Result  
 ![image1](https://github.com/dhm2013724/yolov2_xilinx_fpga/blob/150MHzTn4Tm32Tr26Tc26Cin4Cout2/pynq/result2.jpg)
